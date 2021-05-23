@@ -15,9 +15,12 @@
 #include <pwd.h>
 #include <grp.h>
 #include <pthread.h>
-#include "Ulakefs.h
+#include <syslog.h>
+#include <dirent.h>
+#include <locale.h>
+#include "Ulakefs.h"
 #include "options.h"
-#include "debug.h
+#include "debug.h"
 #include "general.h"
 
 #ifndef S_ISTXT
@@ -587,7 +590,7 @@ int copy_directory(const char *path, int branch_ro, int branch_rw) {
     RETURN(res);
 }
 
-**
+/**
 * set the stat() data of a file
 **/
 int setfile(const char *path, struct stat *fs)
@@ -668,7 +671,7 @@ int copy_file(struct cow *cow)
 {
     DBG("from %s to %s\n", cow->from_path, cow->to_path);
 
-    static char buf[MAXBSIZE];
+    static char buf[4096];
     struct stat to_stat, *fs;
     int from_fd, rcount, to_fd, wcount;
     int rval = 0;
@@ -718,7 +721,7 @@ int copy_file(struct cow *cow)
 	} else
 #endif
     {
-        while ((rcount = read(from_fd, buf, MAXBSIZE)) > 0) {
+        while ((rcount = read(from_fd, buf, 4096)) > 0) {
             wcount = write(to_fd, buf, rcount);
             if (rcount != wcount || wcount == -1) {
                 USYSLOG(LOG_WARNING, "%s", cow->to_path);

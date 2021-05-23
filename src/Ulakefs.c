@@ -7,8 +7,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include "ulakefs.h"
+#include "Ulakefs.h"
 #include "options.h"
+#include "debug.h"
 
 static struct fuse_opt ulakefs_opts[] = {
         FUSE_OPT_KEY("chroot=%s,", KEY_CHROOT),
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
     init_syslog();
     uopt_init();
 
-    if (fuse_opt_parse(&args, NULL, ulakefs_opts, ulake_opt_proc) == -1) RETURN(1);
+    if (fuse_opt_parse(&args, NULL, ulakefs_opts, ulakefs_opt_proc) == -1) RETURN(1);
 
     if (uopt.debug)	debug_init();
 

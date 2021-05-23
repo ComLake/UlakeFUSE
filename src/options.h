@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include "Ulakefs.h"
 
+#define ROOT_SEP ":"
 typedef struct {
     int nbranches;
     branch_entry_t *branches;
@@ -42,6 +43,13 @@ enum {
 };
 
 extern uoptions_t uopt;
+void set_debug_path(char *new_path, int len);
+bool set_debug_onoff(int value);
+void uopt_init();
+int ulakefs_opt_proc(void *data, const char *arg, int key, struct fuse_args *outargs);
+void ulakefs_post_opts();
+void add_branch(char *branch);
+int parse_branches(const char *arg);
 
 char *whiteout_tag(const char *fname);
 int build_path(char *dest, int max_len, const char *callfunc, int line, ...);
