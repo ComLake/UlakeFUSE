@@ -9,6 +9,7 @@
 #include <curl/easy.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <jansson.h>
 
 #include "http.h"
 
@@ -45,7 +46,7 @@ struct http {
  * This set of functions is made such that the http struct and the curl
  * handle it stores can be reused for multiple operations
  *
- * We do not use a single global instance because mediafire does not support
+ * We do not use a single global instance because  does not support
  * keep-alive anyways.
  */
 
@@ -56,7 +57,7 @@ static void http_curl_reset(http * conn)
     curl_easy_setopt(conn->curl_handle, CURLOPT_PROGRESSFUNCTION,
                      http_progress_cb);
     curl_easy_setopt(conn->curl_handle, CURLOPT_PROGRESSDATA, (void *)conn);
-    curl_easy_setopt(conn->curl_handle, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(conn->curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(conn->curl_handle, CURLOPT_SSLENGINE, NULL);
     curl_easy_setopt(conn->curl_handle, CURLOPT_SSLENGINE_DEFAULT, 1L);
     curl_easy_setopt(conn->curl_handle, CURLOPT_ERRORBUFFER, conn->error_buf);
@@ -81,7 +82,14 @@ http         *http_create(void)
     curl_handle = curl_easy_init();
     if (curl_handle == NULL)
         return NULL;
-
+    if (curl_handle){
+        struct curl_slist *headers = NULL;
+        // Authorization: Bearer <token>
+        // https://swagger.io/docs/specification/authentication/bearer-authentication/
+        headers = curl_slist_append(headers,"Authorization: Bearer abcdef123456");
+        curl_easy_setopt(conn, CURLOPT_HTTPHEADER, headers);
+        curl_easy_perform(conn);
+    }
     conn = (http *) calloc(1, sizeof(http));
     conn
     ->curl_handle = curl_handle;
@@ -154,7 +162,9 @@ int http_get_buf(http * conn, const char *url)
 
     http_curl_reset(conn);
     conn->write_buf_len = 0;
+    curl_easy_setopt(conn->curl_handle, CURLOPT_CUSTOMREQUEST, "GET");
     curl_easy_setopt(conn->curl_handle, CURLOPT_URL, url);
+    curl_easy_setopt(conn->curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(conn->curl_handle, CURLOPT_READFUNCTION,
                      http_read_buf_cb);
     curl_easy_setopt(conn->curl_handle, CURLOPT_READDATA, (void *)conn);
